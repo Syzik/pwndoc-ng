@@ -27,5 +27,37 @@ services:
       - mongodb-test
     network_mode: host
 
+  ollama-test:
+    image: ollama/ollama:latest
+    container_name: pwndoc-ollama-test
+    volumes:
+      - ollama-models-test:/root/.ollama
+      - ./scripts:/app/scripts
+    ports:
+      - "127.0.0.1:11434:11434"
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+          cpus: '4'
+        reservations:
+          memory: 8G
+          cpus: '2'
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=/root/.ollama/models
+      - OLLAMA_MODEL=mistral
+      - "OLLAMA_MODEL_PARAMS={\"temperature\": 0.3, \"top_p\": 0.8}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    entrypoint: ["/app/scripts/init-ollama.sh"]
+    command: ["serve"]
+    restart: always
+    network_mode: host
+
 volumes:
   mongo-data-test:
+  ollama-models-test:
