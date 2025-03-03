@@ -652,7 +652,7 @@ export default defineComponent({
     toolbar: {
       type: Array,
       default() {
-        return ['format', 'marks', 'code', 'list', 'table', 'link', 'image', 'undo', 'redo', 'ai']
+        return ['format', 'marks', 'code', 'list', 'table', 'link', 'image', 'caption', 'undo', 'redo', 'ai']
       }
     },
     noAffix: {
@@ -1118,6 +1118,107 @@ export default defineComponent({
     margin-top: 0;
   }
 
+   pre {
+     background: var(--black);
+     border-radius: 0.5rem;
+     color: var(--white);
+     font-family: 'JetBrainsMono', monospace;
+     margin: 1.5rem 0;
+     padding: 0.75rem 1rem;
+ 
+     code {
+       background: none;
+       color: inherit;
+       font-size: 0.8rem;
+       padding: 0;
+     }
+  
+      /* Code styling */
+      .hljs-comment,
+      .hljs-quote {
+        color: #616161;
+      }
+  
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-attribute,
+      .hljs-name,
+      .hljs-regexp,
+      .hljs-link,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class {
+        color: #f98181;
+      }
+  
+      .hljs-number,
+      .hljs-meta,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-literal,
+      .hljs-type,
+      .hljs-params {
+        color: #fbbc88;
+      }
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-bullet {
+        color: #b9f18d;
+      }
+  
+      .hljs-title,
+      .hljs-section {
+        color: #faf594;
+      }
+  
+      .hljs-keyword,
+      .hljs-selector-tag {
+        color: #70cff8;
+      }
+  
+  
+      .hljs-emphasis {
+        font-style: italic;
+      }
+  
+      .hljs-strong {
+        font-weight: 700;
+      }
+    }
+    }
+  
+  
+    .collaboration-cursor__caret {
+      position: relative;
+      margin-left: -1px;
+      margin-right: -1px;
+      border-left: 1px solid #0D0D0D;
+      border-right: 1px solid #0D0D0D;
+      word-break: normal;
+      pointer-events: none;
+    }
+  
+    .collaboration-cursor__label {
+      text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+      color: white;
+      position: absolute;
+      top: -1.4em;
+      left: -1px;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: normal;
+      user-select: none;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px 3px 3px 0;
+      white-space: nowrap;
+    }
+  
+    .editor {
+      :focus {
+        outline: none;
+      }
+  
   h1,
   h2,
   h3,
