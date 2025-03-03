@@ -37,6 +37,7 @@ export default {
         usersConnected: 'Users on the Audit:',
         editAudit: 'Edit Audit',
         downloadReport: 'Download Report',
+        downloadExcel: 'Download Excel Report',
         deleteAudit: 'Delete Audit',
         topButtonSection: {
             submitReview: 'Mark audit as ready for review',

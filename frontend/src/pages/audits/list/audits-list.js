@@ -250,10 +250,52 @@ export default {
                     message: message,
                     type: 'negative',
                     textColor:'white',
-                    position: 'top',
-                    closeBtn: true,
-                    timeout: 0,
-                    classes: "text-pre-wrap"
+                    position: 'top-right',
+                    timeout: 2500
+                })
+            })
+        },
+
+        generateExcel: function(auditId) {
+            var downloadNotif = Notify.create({
+                spinner: QSpinnerGears,
+                message: 'Generating Excel Report',
+                color: "green",
+                timeout: 0,
+                group: false
+            })
+            AuditService.generateAuditExcel(auditId)
+            .then(response => {
+                var blob = new Blob([response.data], {type: "application/octet-stream"});
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = decodeURIComponent(response.headers['content-disposition'].split('"')[1]);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                downloadNotif({
+                    icon: 'done',
+                    spinner: false,
+                    message: 'Excel Report successfully generated',
+                    color: 'green',
+                    timeout: 2500
+                })
+              })
+            .catch( async err => {
+                var message = "Error generating Excel"
+                if (err.response && err.response.data) {
+                    var blob = new Blob([err.response.data], {type: "application/json"})
+                    var blobData = await this.BlobReader(blob)
+                    message = JSON.parse(blobData).datas
+                }
+                downloadNotif()
+                Notify.create({
+                    message: message,
+                    type: 'negative',
+                    textColor:'white',
+                    position: 'top-right',
+                    timeout: 2500
                 })
             })
         },

@@ -69,6 +69,10 @@ export default {
     return  api.get(`audits/${auditId}/generate`, {responseType: 'blob'})
   },
 
+  generateAuditExcel: function(auditId) {
+    return  api.get(`audits/${auditId}/generateexcel`, {responseType: 'blob'})
+  },
+
   updateAuditSortFindings: function(auditId, audit) {
     return  api.put(`audits/${auditId}/sortfindings`, audit)
   },

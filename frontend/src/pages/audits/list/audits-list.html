@@ -172,6 +172,9 @@
                 <q-btn size="sm" flat color="info" @click="generateReport(props.row._id)" icon="fa fa-download">
                   <q-tooltip>{{ $t('tooltip.downloadReport') }}</q-tooltip>
                 </q-btn>
+                <q-btn size="sm" flat color="positive" @click="generateExcel(props.row._id)" icon="fa fa-download">
+                  <q-tooltip>{{ $t('tooltip.downloadExcel') }}</q-tooltip>
+                </q-btn>
                 <q-btn size="sm" flat color="negative" @click="confirmDeleteAudit(props.row)" icon="fa fa-trash">
                   <q-tooltip>{{ $t('tooltip.deleteAudit') }}</q-tooltip>
                 </q-btn>

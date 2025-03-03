@@ -1,12 +1,14 @@
 module.exports = function(app, io) {
 
-    var Response = require('../lib/httpResponse');
+    var Response = require('../lib/httpResponse.js');
     var Audit = require('mongoose').model('Audit');
     var acl = require('../lib/auth').acl;
     var reportGenerator = require('../lib/report-generator');
+    var excelGenerator = require('../lib/excel-generator');
     var _ = require('lodash');
     var utils = require('../lib/utils');
     var Settings = require('mongoose').model('Settings');
+    var CVSS31 = require('../lib/cvsscalc31');  // Correction du chemin d'importation
 
     /* ### AUDITS LIST ### */
 
@@ -422,6 +424,176 @@ module.exports = function(app, io) {
                 Response.BadParameters(res, 'Template File not found')
             else
                 Response.Internal(res, err)
+        });
+    });
+
+    // Generate Excel Report for specific audit
+    app.get("/api/audits/:auditId/generateexcel", acl.hasPermission('audits:read'), function(req, res){
+        // #swagger.tags = ['Audit']
+
+        Audit.getAudit(acl.isAllowed(req.decodedToken.role, 'audits:read-all'), req.params.auditId, req.decodedToken.id)
+        .then(async audit => {
+            try {
+                var settings = await Settings.getAll();
+
+                if (settings.reviews.enabled && settings.reviews.public.mandatoryReview && audit.state !== 'APPROVED') {
+                    Response.Forbidden(res, "Audit was not approved therefore cannot be exported.");
+                    return;
+                }
+
+                // Prepare audit data for Excel
+                const auditData = {
+                    name: audit.name || '',
+                    company: audit.company || '',
+                    date_start: audit.date_start || null,
+                    date_end: audit.date_end || null,
+                    auditType: audit.auditType || '',
+                    scope: audit.scope || '',
+                    findings: audit.findings || []
+                };
+
+                // Log audit data for debugging
+                console.log('Audit data for Excel:', {
+                    name: audit.name,
+                    company: typeof audit.company === 'object' ? audit.company : { name: audit.company },
+                    date_start: audit.date_start,
+                    date_end: audit.date_end,
+                    auditType: audit.auditType,
+                    scope: audit.scope,
+                    raw_audit: audit  // Log the raw audit object to see its structure
+                });
+
+                // Ensure findings array exists
+                auditData.findings = auditData.findings || [];
+
+                // Log findings data for debugging
+                console.log('Findings before processing:', JSON.stringify(auditData.findings.map(f => ({
+                    title: f.title,
+                    description: f.description,
+                    remediation: f.remediation,
+                    remediationText: f.remediationText,
+                    cvssv3: f.cvssv3,
+                    status: f.status
+                })), null, 2));
+
+                // Normalize findings data
+                auditData.findings = (auditData.findings || []).map((finding, index) => {
+                    if (!finding) {
+                        console.error('Found undefined finding at index:', index);
+                        return {
+                            identifier: `${index + 1}`,
+                            title: 'Error: Undefined Finding',
+                            description: '',
+                            remediation: '',
+                            vulnType: '',
+                            cvssv3: '',
+                            cvss: '',
+                            severity: 'Info',
+                            cvssString: '',
+                            references: [],
+                            category: ''
+                        };
+                    }
+
+                    // Clean and decode HTML from text fields
+                    const description = utils.cleanHTML(finding.description || '').trim();
+                    const remediation = utils.cleanHTML(finding.remediation || finding.remediationText || '').trim();
+                    const poc = utils.cleanHTML(finding.poc || '').trim();
+                    const impact = utils.cleanHTML(finding.impact || '').trim();
+                    
+                    // Convert status number to string
+                    const status = typeof finding.status === 'number' 
+                        ? finding.status === 0 ? 'Done' : 'Redacting'
+                        : String(finding.status || '');
+
+                    // Calculate CVSS score and severity
+                    let cvssScore = '';
+                    let cvssSeverity = 'Info';
+                    let cvssString = finding.cvssv3 || '';  // Utiliser directement la chaîne CVSS
+                    
+                    if (finding.cvssv3) {
+                        try {
+                            // Nettoyer et décoder le vecteur CVSS pour le calcul uniquement
+                            let cvssVector = finding.cvssv3
+                                .trim()
+                                // Décoder les caractères HTML
+                                .replace(/&gt;/g, '>')
+                                .replace(/&lt;/g, '<')
+                                .replace(/&amp;/g, '&');
+                            
+                            // Supprimer CVSS:3.0/ ou CVSS:3.1/ s'il existe déjà
+                            cvssVector = cvssVector.replace(/^CVSS:3\.[01]\//, '');
+                            
+                            // Vérifier que le vecteur contient au moins les métriques de base
+                            if (cvssVector.match(/AV:[NALP]\/AC:[LH]\/PR:[UNLH]\/UI:[NR]\/S:[UC]\/[CIA]:[NLH]/)) {
+                                cvssVector = `CVSS:3.1/${cvssVector}`;
+                                
+                                const result = CVSS31.calculateCVSSFromVector(cvssVector);
+                                if (result.success) {
+                                    cvssScore = result.baseScore.toFixed(1);
+                                    cvssSeverity = result.baseSeverity;
+                                } else {
+                                    console.error('Invalid CVSS vector for finding:', {
+                                        title: finding.title,
+                                        cvssv3: finding.cvssv3,
+                                        error: result.errorType,
+                                        cleanVector: cvssVector
+                                    });
+                                }
+                            } else {
+                                console.error('Malformed CVSS vector for finding:', {
+                                    title: finding.title,
+                                    cvssv3: finding.cvssv3,
+                                    cleanVector: cvssVector
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Error calculating CVSS for finding:', {
+                                title: finding.title,
+                                cvssv3: finding.cvssv3,
+                                error: err.message
+                            });
+                        }
+                    }
+                    
+                    return {
+                        identifier: finding.identifier || `${index + 1}`,
+                        title: (finding.title || '').trim(),
+                        description: description,
+                        remediation: remediation,
+                        vulnType: (finding.vulnType || '').trim(),
+                        cvssv3: finding.cvssv3 || '',  // Juste la chaîne brute
+                        cvss: cvssScore,
+                        severity: cvssSeverity,
+                        status: status,
+                        poc: poc,
+                        impact: impact,
+                        affected: finding.affected || [],
+                        references: finding.references || [],
+                        category: finding.category || ''
+                    };
+                });
+
+                // Log findings data after processing
+                console.log('Findings after processing:', JSON.stringify(auditData.findings.map(f => ({
+                    title: f.title,
+                    description: f.description,
+                    remediation: f.remediation,
+                    status: f.status,
+                    cvss: f.cvss,
+                    severity: f.severity
+                })), null, 2));
+
+                var excelDoc = await excelGenerator.generateExcel(auditData);
+                Response.SendFile(res, `${audit.name.replace(/[\\\/:*?"<>|]/g, "")}.xlsx`, excelDoc);
+            } catch (err) {
+                console.error('Error generating Excel:', err);
+                Response.Internal(res, err);
+            }
+        })
+        .catch(err => {
+            console.error('Error getting audit:', err);
+            Response.Internal(res, err)
         });
     });
 

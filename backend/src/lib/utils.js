@@ -59,3 +59,36 @@ function getSockets(io, room) {
   return result
 }
 exports.getSockets = getSockets
+
+// Clean HTML tags and decode HTML entities
+function cleanHTML(text) {
+    if (!text) return '';
+    
+    // First, decode HTML entities
+    const entities = {
+        '&nbsp;': ' ',
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&#39;': "'",
+        '&apos;': "'",
+        '&#x2F;': '/',
+        '&#x27;': "'",
+        '&#x60;': '`'
+    };
+    
+    // Replace HTML entities
+    let decodedText = text.replace(/&[^;]+;/g, match => {
+        return entities[match] || match;
+    });
+    
+    // Then remove HTML tags
+    decodedText = decodedText.replace(/<[^>]*>/g, '');
+    
+    // Normalize whitespace
+    decodedText = decodedText.replace(/\s+/g, ' ').trim();
+    
+    return decodedText;
+}
+exports.cleanHTML = cleanHTML;
