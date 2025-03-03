@@ -12,6 +12,7 @@ export default {
         cancel: 'Cancel',
         confirm: 'Confirm',
         create: 'Create',
+        apply: 'Apply',
         topButtonSection: {
             submitReview: 'Submit Review',
             cancelReview: 'Cancel Review',
@@ -50,6 +51,8 @@ export default {
         findAudits: 'Find Audits',
         delete: 'Delete',
         download: 'Download',
+        rewriteText: 'Rewrite',
+        customPrompt: 'Custom prompt',
     },
     msg: {
         auditReviewUpdateOk: 'Audit review status updated successfully',
@@ -115,13 +118,14 @@ export default {
         vulnerabilityMergeOk: 'Vulnerability merge successfully',
         tryingToContactBackend: '<p>Trying to contact backend</p>',
         wrongContactingBackend: 'Something went wrong contacting backend',
+        generatingText: 'Generating text...',
     },
     err: {
         notDefinedLanguage: 'Not defined for this language',
         invalidYamlFormat: 'Invalid YAML format detected',
-        parsingError1: 'Parsing Error: {0}',
+        parsingError1: 'Parsing Error: {0}',
         parsingError2: 'Parsing Error: line {0}, column: {1}',
-        invalidJsonFormat: 'Invalid JSON format detected',
+        invalidJsonFormat: 'Invalid JSON format detected',
         jsonMustBeAnObject: 'JSON must be an object.',
         importingSettingsError: 'Error importing settings',
         errorWhileParsingJsonContent: 'Error while parsing JSON content: {0}',
@@ -129,6 +133,8 @@ export default {
         expiredToken: 'Expired token',
         invalidToken: 'Invalid token',
         invalidCredentials: 'Invalid credentials',
+        aiServiceUnavailable: 'AI service is not available at the moment. Please try again later.',
+        aiGenerationError: 'Error during text generation'
     },
     cvss: {
         title: 'CVSS v3.1 Base Score',

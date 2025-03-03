@@ -12,6 +12,7 @@ export default {
         cancel: 'Abbrechen',
         confirm: 'Bestätigen',
         create: 'Erstellen',
+        apply: 'Anwenden',
         topButtonSection: {
             submitReview: 'Zur Prüfung einreichen',
             cancelReview: 'Überprüfung abbrechen',
@@ -50,6 +51,8 @@ export default {
         findAudits: 'Audits finden',
         delete: 'Löschen',
         download: 'Download',
+        rewriteText: 'Neu schreiben',
+        customPrompt: 'Benutzerdefinierter Prompt',
     },
     msg: {
         auditReviewUpdateOk: 'Prüfstatus des Audits erfolgreich aktualisiert',
@@ -115,6 +118,7 @@ export default {
         vulnerabilityMergeOk: 'Schwachstellen erfolgreich zusammengeführt',
         tryingToContactBackend: '<p>Versuche das Backend zu erreichen</p>',
         wrongContactingBackend: 'Beim Versuch das Backend zu erreichen ist etwas schief gegangen',
+        generatingText: 'Text wird generiert...',
     },
     err: {
         notDefinedLanguage: 'Für diese Sprache nicht definiert',
@@ -129,6 +133,8 @@ export default {
         expiredToken: 'Token abgelaufen',
         invalidToken: 'Token ungültig',
         invalidCredentials: 'Ungültige Zugangsdaten',
+        aiServiceUnavailable: 'Der KI-Dienst ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.',
+        aiGenerationError: 'Fehler bei der Texterstellung'
     },
     cvss: {
         title: 'CVSS v3.1 Basiswert',

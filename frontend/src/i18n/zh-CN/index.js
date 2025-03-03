@@ -12,6 +12,7 @@ export default {
         cancel: '取消',
         confirm: '确认',
         create: '创建',
+        apply: '应用',
         topButtonSection: {
             submitReview: '提交审核',
             cancelReview: '取消审核',
@@ -50,6 +51,8 @@ export default {
         findAudits: '查找审计项目',
         delete: '删除',
         download: '下载',
+        rewriteText: '重写',
+        customPrompt: '自定义提示',
     },
     msg: {
         auditReviewUpdateOk: '项目审核状态更新成功',
@@ -108,11 +111,12 @@ export default {
         vulnerabilityMergeOk: '漏洞合并成功',
         tryingToContactBackend: '<p>尝试连接后端服务</p>',
         wrongContactingBackend: '连接后端服务失败',
+        generatingText: '正在生成文本...',
     },
     err: {
         notDefinedLanguage: '没有定义这种语言',
         invalidYamlFormat: '检测到无效的 YAML 格式',
-        parsingError1: '解析错误： {0}',
+        parsingError1: '解析错误： {0}',
         parsingError2: '解析错误： line {0}， column: {1}',
         invalidJsonFormat: '检测到无效的 JSON 格式',
         jsonMustBeAnObject: 'JSON 必须为 object。',
@@ -122,6 +126,8 @@ export default {
         expiredToken: 'token过期',
         invalidToken: '无效token',
         invalidCredentials: '无效身份',
+        aiServiceUnavailable: 'AI服务目前不可用。请稍后再试。',
+        aiGenerationError: '文本生成过程中出错'
     },
     cvss: {
         title: 'CVSSv3 基础评分',
@@ -225,7 +231,7 @@ export default {
             RC_Heading: "该指标衡量对漏洞存在的信心程度和已知技术细节的可信度。 有时只公开漏洞的存在，而没有具体的细节。 例如，影响可能被认为是不可取的，但根本原因可能未知。 该漏洞稍后可能会被研究证实，该研究表明漏洞可能存在于何处，尽管研究可能不确定。 最后，漏洞可以通过受影响技术的作者或供应商的确认来确认。 当漏洞被确定存在时，漏洞的紧迫性会更高。 该指标还表明潜在攻击者可用的技术知识水平。",
             RC_X_Label: "分配此值表示没有足够的信息来选择其他值之一，并且对整体 “时间分数” 没有影响，即它对评分的影响与分配 “已确认” 相同。",
             RC_U_Label: "有影响报告表明存在漏洞。 报告表明漏洞的原因未知，或者报告可能对漏洞的原因或影响有所不同。 报告者不确定漏洞的真实性质，并且对于报告的有效性或是否可以应用静态基础分数（考虑到所描述的差异）几乎没有信心。 一个例子是一个错误报告，它指出发生了间歇性但不可重现的崩溃，内存损坏的证据表明可能会导致拒绝服务或更严重的影响。",
-            RC_R_Label: "重要细节已公布，但研究人员要么对根本原因没有完全信心，要么无法访问源代码来完全确认可能导致结果的所有交互。 但是，存在合理的信心，即该错误是可重现的，并且至少可以验证一个影响（概念证明漏洞利用可能提供这一点）。 一个例子是对漏洞研究的详细记录，并附有解释（可能被混淆或“留给读者作为练习”），以保证如何重现结果。",
+            RC_R_Label: "重要细节已公布，但研究人员要么对根本原因没有完全信心，要么无法访问源代码来完全确认可能导致结果的所有交互。 但是，存在合理的信心，即该错误是可重现的，并且至少可以验证一个影响（概念证明漏洞可以提供这一点）。 一个例子是对漏洞研究的详细记录，并附有解释（可能被混淆或“留给读者作为练习”），以保证如何重现结果。",
             RC_C_Label: "存在详细的报告，或者功能复制是可能的（功能漏洞可以提供这一点）。 源代码可用于独立验证研究的断言，或受影响代码的作者或供应商已确认存在漏洞。",
             environmentalMetricGroup_Legend: "这些指标使分析师能够根据受影响的 IT 资产对用户组织的重要性自定义 CVSS 分数，衡量标准是补充/替代安全控制、机密性、完整性和可用性。 度量是基本度量的修改等效项，并根据组织基础架构中的组件位置分配度量值。",
             CR_Heading: "这些指标使分析师能够根据受影响 IT 资产的机密性对用户组织的重要性（相对于其他影响）自定义 CVSS 分数。 该指标通过重新加权修改后的机密性影响指标与其他修改后的影响来修改环境分数。",

@@ -105,17 +105,17 @@ app.use(bodyParser.urlencoded({
 
 app.use(cookieParser())
 
-// Routes import
+// Routes
 require('./routes/user')(app);
 require('./routes/audit')(app, io);
 require('./routes/client')(app);
 require('./routes/company')(app);
 require('./routes/vulnerability')(app);
 require('./routes/template')(app);
-require('./routes/vulnerability')(app);
 require('./routes/data')(app);
 require('./routes/image')(app);
 require('./routes/settings')(app);
+require('./routes/ai')(app);
 
 const { cronJobs } = require('./lib/cron');
 cronJobs();

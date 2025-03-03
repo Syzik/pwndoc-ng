@@ -12,6 +12,7 @@ export default {
         cancel: 'Annuler',
         confirm: 'Confirmer',
         create: 'Créer',
+        apply: 'Appliquer',
         topButtonSection: {
             submitReview: 'Soumettre les modifications',
             cancelReview: 'Annuler les modifications',
@@ -46,6 +47,8 @@ export default {
         findAudits: 'Rechercher des Audits',
         delete: 'Supprimer',
         download: 'Télécharger',
+        rewriteText: 'Réécrire',
+        customPrompt: 'Prompt personnalisé',
     },
     msg: {
         auditReviewUpdateOk: 'État de l\'examin d\'audit mis à jour avec succès',
@@ -110,6 +113,7 @@ export default {
         vulnerabilityMergeOk: 'Fusion des vulnérabilités réussie',
         tryingToContactBackend: '<p>Essaie de contacter le backend</p>',
         wrongContactingBackend: 'Une erreur s\'est produite lors du contact avec le backend',
+        generatingText: 'Génération en cours...',
     },
     err: {
         notDefinedLanguage: 'Non défini pour cette langue',
@@ -124,6 +128,8 @@ export default {
         expiredToken: 'Token expiré',
         invalidToken: 'Token invalide',
         invalidCredentials: 'Identifiants invalides',
+        aiServiceUnavailable: 'Le service IA n\'est pas disponible pour le moment. Veuillez réessayer plus tard.',
+        aiGenerationError: 'Erreur lors de la génération du texte'
     },
     cvss: {
         title: 'Score de base de CVSS v3.1',
