@@ -502,6 +502,36 @@
             @click="toggleDiff = !toggleDiff"
           />
         </div>
+        <q-separator
+          vertical
+          class="q-mx-sm"
+          v-if="toolbar.indexOf('redo') !== -1"
+        />
+        <q-space />
+        <!-- AI Tools Section -->
+        <div v-if="toolbar.indexOf('ai') !== -1" class="row items-center">
+          <q-separator vertical class="q-mx-sm" />
+          <q-btn
+            flat
+            size="sm"
+            dense
+            icon="mdi-auto-fix"
+            class="text-primary"
+            @click="rephraseText"
+          >
+            <q-tooltip :delay="500" content-class="text-bold">{{ $t('tooltip.rewriteText') }}</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            size="sm"
+            dense
+            icon="mdi-console-line"
+            class="text-primary"
+            @click="customPrompt"
+          >
+            <q-tooltip :delay="500" content-class="text-bold">{{ $t('tooltip.customPrompt') }}</q-tooltip>
+          </q-btn>
+        </div>
       </q-toolbar>
     </div>
     <q-separator />
@@ -542,6 +572,7 @@
 
 <script>
 import { defineComponent } from 'vue';
+import AiDialog from './AiDialog.vue';
 
 import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer  } from "@tiptap/vue-3";
 //  Import extensions
@@ -620,9 +651,9 @@ export default defineComponent({
     },
     toolbar: {
       type: Array,
-      default: function () {
-        return ["format", "marks", "list", "code", "table", "image", "caption"];
-      },
+      default() {
+        return ['format', 'marks', 'code', 'list', 'table', 'link', 'image', 'undo', 'redo', 'ai']
+      }
     },
     noAffix: {
       type: Boolean,
@@ -642,31 +673,41 @@ export default defineComponent({
 
   components: {
     EditorContent,
-    BubbleMenu
+    BubbleMenu,
+    AiDialog
   },
 
   data() {
     return {
       editor: null,
-      json: "",
-      html: "",
-      toggleDiff: true,
+      json: null,
+      html: '',
+      initialeDataUpdated: false,
+      toolbar: [
+        'format',
+        'marks',
+        'code',
+        'list',
+        'table',
+        'link',
+        'image',
+        'history',
+        'ai'
+      ],
       affixRelativeElement: "affix-relative-element",
       status: 'connecting',
       state:false,
       fullId:"",
       countChange:0,
       countChangeAfterUpdate:-1,
-      initialeDataUpdated:false,
-      htmlEncode: Utils.htmlEncode,
       stickyConfig: {
         zIndex: 1000,
         top: 50,
         sticked: true,
         disabled: false,
         wrapper: true
-      }
-
+      },
+      aiDialog: null
     };
   },
 
@@ -699,7 +740,8 @@ export default defineComponent({
 
     let extensionEditor = [
         StarterKit.configure({
-          codeBlock: false, // Désactive le codeBlock standard pour mettre le code block highlight
+          codeBlock: true, // Activation de l'extension codeBlock
+          code: true, // Activation de l'extension code
         }),
         Highlight.configure({
           multicolor: true,
@@ -968,54 +1010,73 @@ export default defineComponent({
       }
       return colour;
     },
-    highlightAllCodeBlocks(html) {
-      if (!html) return '';
+    rephraseText() {
+      // Get selected text directly from the editor
+      const { from, to } = this.editor.state.selection;
+      const selectedText = this.editor.state.doc.textBetween(from, to, ' ');
+      console.log('Selected text:', selectedText);
+      console.log('Type of selectedText:', typeof selectedText);
+      console.log('Length of text:', selectedText.length);
 
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-
-      doc.querySelectorAll('pre code').forEach((codeBlock) => {
-        const langClass = codeBlock.className.match(/language-([a-zA-Z0-9-]+)/);
-        const lang = langClass ? langClass[1] : 'plaintext';
-        const originalCode = codeBlock.textContent;
-
-        try {
-          const highlighted = lowlight.highlight(lang, originalCode);
-          const tempDiv = document.createElement('div');
-          highlighted.children.forEach((node) => {
-            tempDiv.appendChild(this.convertLowlightNodeToHtml(node));
-          });
-          codeBlock.innerHTML = tempDiv.innerHTML;
-        } catch (e) {
-          console.warn(`Highlighting failed for ${lang}, fallback to plaintext`, e);
-          codeBlock.textContent = originalCode;
-        }
-      });
-
-      return doc.body.innerHTML;
-    },
-    convertLowlightNodeToHtml(node) {
-      if (node.type === 'text') {
-        return document.createTextNode(node.value);
-      } else if (node.type === 'element') {
-        const el = document.createElement(node.tagName);
-        if (node.properties) {
-          Object.entries(node.properties).forEach(([key, value]) => {
-            if (key === 'className') {
-              el.className = value.join(' ');
-            } else {
-              el.setAttribute(key, value);
-            }
-          });
-        }
-        if (node.children) {
-          node.children.forEach((child) => {
-            el.appendChild(this.convertLowlightNodeToHtml(child));
-          });
-        }
-        return el;
+      if (!selectedText) {
+        this.$q.notify({
+          type: 'warning',
+          message: 'Please select text to rewrite'
+        })
+        return
       }
-      return document.createTextNode('');
+
+      this.$q.dialog({
+        component: AiDialog,
+        componentProps: {
+          title: 'Rewrite text',
+          task: 'rephrase',
+          text: selectedText
+        }
+      }).onOk(response => {
+        console.log('Response received:', response);
+        if (response) {
+          // Replace selected text
+          this.editor
+            .chain()
+            .focus()
+            .deleteRange({ from, to })
+            .insertContent(response)
+            .run();
+        }
+      })
+    },
+
+    customPrompt() {
+      const selectedText = this.editor.state.selection.content().content.textContent
+      this.$q.dialog({
+        title: 'Custom prompt',
+        message: 'Enter your prompt :',
+        prompt: {
+          model: '',
+          type: 'text',
+          filled: true,
+          outlined: true
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(prompt => {
+        if (!prompt) return
+
+        this.$q.dialog({
+          component: AiDialog,
+          componentProps: {
+            title: 'AI Response',
+            task: 'custom',
+            prompt: prompt,
+            text: selectedText || ''
+          }
+        }).onOk(response => {
+          if (response) {
+            this.editor.chain().focus().insertContent(response).run()
+          }
+        })
+      })
     },
     updateHTML() {
       if (!this.initialeDataUpdated) return;
@@ -1032,6 +1093,20 @@ export default defineComponent({
       }
       this.$emit('update:modelValue', this.html);
     },
+    highlightAllCodeBlocks(html) {
+      if (!html) return '';
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      // Find all code blocks
+      const codeBlocks = tempDiv.querySelectorAll('pre code');
+      codeBlocks.forEach(block => {
+        // Add class for highlighting
+        block.classList.add('language-text');
+      });
+      
+      return tempDiv.innerHTML;
+    },
   },
 });
 </script>
@@ -1041,111 +1116,6 @@ export default defineComponent({
 .tiptap {
   :first-child {
     margin-top: 0;
-  }
-
-  pre {
-    background: var(--black);
-    border-radius: 0.5rem;
-    color: var(--white);
-    font-family: 'JetBrainsMono', monospace;
-    margin: 1.5rem 0;
-    padding: 0.75rem 1rem;
-
-    code {
-      background: none;
-      color: inherit;
-      font-size: 0.8rem;
-      padding: 0;
-    }
-
-    /* Code styling */
-    .hljs-comment,
-    .hljs-quote {
-      color: #616161;
-    }
-
-    .hljs-variable,
-    .hljs-template-variable,
-    .hljs-attribute,
-    .hljs-tag,
-    .hljs-name,
-    .hljs-regexp,
-    .hljs-link,
-    .hljs-name,
-    .hljs-selector-id,
-    .hljs-selector-class {
-      color: #f98181;
-    }
-
-    .hljs-number,
-    .hljs-meta,
-    .hljs-built_in,
-    .hljs-builtin-name,
-    .hljs-literal,
-    .hljs-type,
-    .hljs-params {
-      color: #fbbc88;
-    }
-
-    .hljs-string,
-    .hljs-symbol,
-    .hljs-bullet {
-      color: #b9f18d;
-    }
-
-    .hljs-title,
-    .hljs-section {
-      color: #faf594;
-    }
-
-    .hljs-keyword,
-    .hljs-selector-tag {
-      color: #70cff8;
-    }
-
-    .hljs-emphasis {
-      font-style: italic;
-    }
-
-    .hljs-strong {
-      font-weight: 700;
-    }
-  }
-}
-
-
-.collaboration-cursor__caret {
-  position: relative;
-  margin-left: -1px;
-  margin-right: -1px;
-  border-left: 1px solid #0D0D0D;
-  border-right: 1px solid #0D0D0D;
-  word-break: normal;
-  pointer-events: none;
-}
-
-.collaboration-cursor__label {
- text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
- color:white;
-  position: absolute;
-  top: -1.4em;
-  left: -1px;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: normal;
-  user-select: none;
-
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px 3px 3px 0;
-  white-space: nowrap;
-}
-
-
-
-.editor {
-  :focus {
-    outline: none;
   }
 
   h1,

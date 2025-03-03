@@ -23,6 +23,7 @@
   "dependencies": {
     "@hocuspocus/server": "^2.15.2",
     "angular-expressions": "^1.4.3",
+    "axios": "^1.8.1",
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
