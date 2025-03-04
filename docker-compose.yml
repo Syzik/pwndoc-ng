@@ -53,15 +53,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 16G
-          cpus: '4'
+          memory: 24G
+          cpus: '8'
         reservations:
-          memory: 8G
-          cpus: '2'
+          memory: 12G
+          cpus: '4'
     environment:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_MODELS=/root/.ollama/models
-      - OLLAMA_MODEL=mistral
+      - OLLAMA_MODEL=deepseek-r1:14b
       - "OLLAMA_MODEL_PARAMS={\"temperature\": 0.3, \"top_p\": 0.8}"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434"]
