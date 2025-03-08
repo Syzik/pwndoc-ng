@@ -7,7 +7,7 @@
             "server": "mongo-pwndoc-ng",
             "port": "27017"
         },
-        "apidoc": true,
+        "apidoc": true
     },
     "prod": {
         "port": 4242,
