@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://ollama:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-coder:14b';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-r1:14b';
 const OLLAMA_TIMEOUT = parseInt(process.env.OLLAMA_TIMEOUT) || 30000;
 
 const client = axios.create({
