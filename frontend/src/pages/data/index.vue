@@ -1,6 +1,6 @@
 <template>
 <div>
-    <q-drawer side="left" :modelValue="true">
+    <q-drawer side="left" :modelValue="true" bordered class="bg-white">
         <q-list class="home-drawer">
             <q-item-label header>{{$t('handleCustomData')}}</q-item-label>
         
@@ -70,3 +70,12 @@ export default defineComponent({
 });
 </script>
 
+<style>
+.q-drawer {
+  position: fixed;
+  top: 50px;
+  width: 250px;
+  height: calc(100vh - 50px);
+  z-index: 1000;
+}
+</style>

@@ -1122,7 +1122,6 @@ export default defineComponent({
         }
       })
     },
-
     customPrompt() {
       const selectedText = this.editor.state.selection.content().content.textContent
       this.$q.dialog({
@@ -1180,9 +1179,54 @@ export default defineComponent({
         // Add class for highlighting
         block.classList.add('language-text');
       });
-      
       return tempDiv.innerHTML;
     },
+    convertLowlightNodeToHtml(node) {
+      if (node.type === 'text') {
+        return document.createTextNode(node.value);
+      } else if (node.type === 'element') {
+        const el = document.createElement(node.tagName);
+        if (node.properties) {
+          Object.entries(node.properties).forEach(([key, value]) => {
+            if (key === 'className') {
+              el.className = value.join(' ');
+            } else {
+              el.setAttribute(key, value);
+            }
+          });
+        }
+        if (node.children) {
+          node.children.forEach((child) => {
+            el.appendChild(this.convertLowlightNodeToHtml(child));
+          });
+        }
+        return el;
+      }
+      return document.createTextNode('');
+    }
+
+//       highlightAllCodeBlocks(html) {
+//      if (!html) return '';
+//      const parser = new DOMParser();
+//      const doc = parser.parseFromString(html, 'text/html');
+//      doc.querySelectorAll('pre code').forEach((codeBlock) => {
+//        const langClass = codeBlock.className.match(/language-([a-zA-Z0-9-]+)/);
+//        const lang = langClass ? langClass[1] : 'plaintext';
+//        const originalCode = codeBlock.textContent;
+//        try {
+//          const highlighted = lowlight.highlight(lang, originalCode);
+//          const tempDiv = document.createElement('div');
+//          highlighted.children.forEach((node) => {
+//            tempDiv.appendChild(this.convertLowlightNodeToHtml(node));
+//          });
+//          codeBlock.innerHTML = tempDiv.innerHTML;
+//        } catch (e) {
+//          console.warn(`Highlighting failed for ${lang}, fallback to plaintext`, e);
+//          codeBlock.textContent = originalCode;
+//        }
+//      });
+//      return doc.body.innerHTML;
+//    },
   },
 });
 </script>
