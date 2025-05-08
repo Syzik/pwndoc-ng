@@ -532,6 +532,36 @@
             <q-tooltip :delay="500" content-class="text-bold">{{ $t('tooltip.customPrompt') }}</q-tooltip>
           </q-btn>
         </div>
+        <q-separator
+          vertical
+          class="q-mx-sm"
+          v-if="toolbar.indexOf('redo') !== -1"
+        />
+        <q-space />
+        <!-- AI Tools Section -->
+        <div v-if="toolbar.indexOf('ai') !== -1" class="row items-center">
+          <q-separator vertical class="q-mx-sm" />
+          <q-btn
+            flat
+            size="sm"
+            dense
+            icon="mdi-auto-fix"
+            class="text-primary"
+            @click="rephraseText"
+          >
+            <q-tooltip :delay="500" content-class="text-bold">{{ $t('tooltip.rewriteText') }}</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            size="sm"
+            dense
+            icon="mdi-console-line"
+            class="text-primary"
+            @click="customPrompt"
+          >
+            <q-tooltip :delay="500" content-class="text-bold">{{ $t('tooltip.customPrompt') }}</q-tooltip>
+          </q-btn>
+        </div>
       </q-toolbar>
     </div>
     <q-separator />
@@ -593,8 +623,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
-import AiDialog from './AiDialog.vue';
+import { defineComponent } from 'vue';
 
 import { Editor, EditorContent, BubbleMenu, VueNodeViewRenderer  } from "@tiptap/vue-3";
 //  Import extensions
@@ -783,7 +812,6 @@ export default defineComponent({
     let extensionEditor = [
         StarterKit.configure({
           codeBlock: false, // Désactive le codeBlock standard pour mettre le code block highlight
-          code: true, // Activation de l'extension code
         }),
 
         Highlight.configure({
@@ -1086,100 +1114,31 @@ export default defineComponent({
       }
       return colour;
     },
-    rephraseText() {
-      // Get selected text directly from the editor
-      const { from, to } = this.editor.state.selection;
-      const selectedText = this.editor.state.doc.textBetween(from, to, ' ');
-      console.log('Selected text:', selectedText);
-      console.log('Type of selectedText:', typeof selectedText);
-      console.log('Length of text:', selectedText.length);
-
-      if (!selectedText) {
-        this.$q.notify({
-          type: 'warning',
-          message: 'Please select text to rewrite'
-        })
-        return
-      }
-
-      this.$q.dialog({
-        component: AiDialog,
-        componentProps: {
-          title: 'Rewrite text',
-          task: 'rephrase',
-          text: selectedText
-        }
-      }).onOk(response => {
-        console.log('Response received:', response);
-        if (response) {
-          // Replace selected text
-          this.editor
-            .chain()
-            .focus()
-            .deleteRange({ from, to })
-            .insertContent(response)
-            .run();
-        }
-      })
-    },
-    customPrompt() {
-      const selectedText = this.editor.state.selection.content().content.textContent
-      this.$q.dialog({
-        title: 'Custom prompt',
-        message: 'Enter your prompt :',
-        prompt: {
-          model: '',
-          type: 'text',
-          filled: true,
-          outlined: true
-        },
-        cancel: true,
-        persistent: true
-      }).onOk(prompt => {
-        if (!prompt) return
-
-        this.$q.dialog({
-          component: AiDialog,
-          componentProps: {
-            title: 'AI Response',
-            task: 'custom',
-            prompt: prompt,
-            text: selectedText || ''
-          }
-        }).onOk(response => {
-          if (response) {
-            this.editor.chain().focus().insertContent(response).run()
-          }
-        })
-      })
-    },
-    updateHTML() {
-      if (!this.initialeDataUpdated) return;
-      this.json = this.editor.getJSON();
-      this.html = this.editor.getHTML();
-      this.html = this.highlightAllCodeBlocks(this.html);
-      if (
-        Array.isArray(this.json.content) &&
-        this.json.content.length === 1 &&
-        !this.json.content[0].hasOwnProperty("content") &&
-        !this.json.content[0].hasOwnProperty("attrs")
-      ) {
-        this.html = "";
-      }
-      this.$emit('update:modelValue', this.html);
-    },
     highlightAllCodeBlocks(html) {
       if (!html) return '';
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-      
-      // Find all code blocks
-      const codeBlocks = tempDiv.querySelectorAll('pre code');
-      codeBlocks.forEach(block => {
-        // Add class for highlighting
-        block.classList.add('language-text');
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      doc.querySelectorAll('pre code').forEach((codeBlock) => {
+        const langClass = codeBlock.className.match(/language-([a-zA-Z0-9-]+)/);
+        const lang = langClass ? langClass[1] : 'plaintext';
+        const originalCode = codeBlock.textContent;
+
+        try {
+          const highlighted = lowlight.highlight(lang, originalCode);
+          const tempDiv = document.createElement('div');
+          highlighted.children.forEach((node) => {
+            tempDiv.appendChild(this.convertLowlightNodeToHtml(node));
+          });
+          codeBlock.innerHTML = tempDiv.innerHTML;
+        } catch (e) {
+          console.warn(`Highlighting failed for ${lang}, fallback to plaintext`, e);
+          codeBlock.textContent = originalCode;
+        }
       });
-      return tempDiv.innerHTML;
+
+      return doc.body.innerHTML;
     },
     convertLowlightNodeToHtml(node) {
       if (node.type === 'text') {
@@ -1203,30 +1162,22 @@ export default defineComponent({
         return el;
       }
       return document.createTextNode('');
-    }
-
-//       highlightAllCodeBlocks(html) {
-//      if (!html) return '';
-//      const parser = new DOMParser();
-//      const doc = parser.parseFromString(html, 'text/html');
-//      doc.querySelectorAll('pre code').forEach((codeBlock) => {
-//        const langClass = codeBlock.className.match(/language-([a-zA-Z0-9-]+)/);
-//        const lang = langClass ? langClass[1] : 'plaintext';
-//        const originalCode = codeBlock.textContent;
-//        try {
-//          const highlighted = lowlight.highlight(lang, originalCode);
-//          const tempDiv = document.createElement('div');
-//          highlighted.children.forEach((node) => {
-//            tempDiv.appendChild(this.convertLowlightNodeToHtml(node));
-//          });
-//          codeBlock.innerHTML = tempDiv.innerHTML;
-//        } catch (e) {
-//          console.warn(`Highlighting failed for ${lang}, fallback to plaintext`, e);
-//          codeBlock.textContent = originalCode;
-//        }
-//      });
-//      return doc.body.innerHTML;
-//    },
+    },
+    updateHTML() {
+      if (!this.initialeDataUpdated) return;
+      this.json = this.editor.getJSON();
+      this.html = this.editor.getHTML();
+      this.html = this.highlightAllCodeBlocks(this.html);
+      if (
+        Array.isArray(this.json.content) &&
+        this.json.content.length === 1 &&
+        !this.json.content[0].hasOwnProperty("content") &&
+        !this.json.content[0].hasOwnProperty("attrs")
+      ) {
+        this.html = "";
+      }
+      this.$emit('update:modelValue', this.html);
+    },
   },
 });
 </script>
