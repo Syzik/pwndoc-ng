@@ -356,16 +356,14 @@ expressions.filters.linkTo = function(input, url) {
     var entityencodedurl = url.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;'); // encode to prevent xml issues
     var entityencodedinput = input.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;'); // encode to prevent xml issues
     
-    return `<w:r>
+    return `<w:p><w:r>
     <w:fldChar w:fldCharType="begin"/></w:r><w:r>
     <w:instrText xml:space="preserve"> HYPERLINK "${entityencodedurl}" </w:instrText>
 </w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>
-<w:r><w:rPr><w:rStyle w:val="Hyperlink"/>
+<w:r><w:rPr><w:rStyle w:val="PwndocLink"/>
         <w:shd w:val="clear" w:color="auto" w:fill="auto"/> <!-- Remove any shading -->
-        <w:u w:val="single"/> <!-- Add underline -->
-        <w:color w:val="0000FF"/> <!-- Set text color to blue -->
     </w:rPr><w:t>${entityencodedinput}</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/>
-</w:r>`;
+</w:r></w:p>`;
         
 }
 
@@ -916,7 +914,12 @@ function cvssStrToObject(cvss) {
     }
     return res
 }
-
+function stripParagraphTags(input) {
+    console.log("JE STRIP MES PARAMETRES")
+    return input
+        .replace(/<\/?p[^>]*>/gi, '') // supprime toutes les balises <p> ou </p>
+        .trim();
+}
 async function prepAuditData(data, settings) {
     /** CVSS Colors for table cells */
     var noneColor = settings.report.public.cvssColors.noneColor.replace('#', ''); //default of blue ("#4A86E8")
@@ -1033,11 +1036,13 @@ async function prepAuditData(data, settings) {
             references: finding.references || [],
             poc: await splitHTMLParagraphs(finding.poc),
             affected: finding.scope || "",
+            //affected: stripParagraphTags(finding.scope) || [],
             status: finding.status || "",
             category: $t(finding.category) || $t("No Category"),
             identifier: "IDX-" + utils.lPad(finding.identifier),
             unique_id: finding._id.toString()
         }
+        console.log(tmpFinding)
         // Remediation Complexity color 
         if (tmpFinding.remediationComplexity === 1) tmpFinding.remediation.cellColorComplexity = cellLowColorRemediationComplexity
         else if (tmpFinding.remediationComplexity === 2) tmpFinding.remediation.cellColorComplexity = cellMediumColorRemediationComplexity
